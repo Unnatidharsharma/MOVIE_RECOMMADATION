@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Movie Recommender</title>
+    <style>
+        /* Global Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background-color: #141414;
+            /* Netflix-style dark background */
+            color: #FFFFFF;
+            /* Pure white for text */
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            position: fixed;
+            /* Fix the navbar at the top */
+            top: 0;
+            left: 0;
+            width: 100%;
+            /* Full width */
+            height: 85px;
+            /* Set a fixed height for the navbar */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #141414;
+            border-bottom: 1px solid #333333;
+            z-index: 1000;
+            /* Ensure the navbar stays above other content */
+        }
+
+        .navbar .logo img {
+            height: 40px;
+            /* Adjust the height of the logo */
+            width: auto;
+            /* Maintain aspect ratio */
+        }
+
+        .navbar .search-bar {
+            flex: 1;
+            margin: 0 20px;
+        }
+
+        .navbar .search-bar input {
+            width: 80%;
+            padding: 8px;
+            border: none;
+            border-radius: 3px;
+            background-color: #333333;
+            color: #FFFFFF;
+        }
+
+        .navbar .nav-links {
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar .nav-links a {
+            color: #FFFFFF;
+            margin-left: 20px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .navbar .nav-links a:hover {
+            color: #E50914;
+            /* Netflix red on hover */
+        }
+
+        .navbar .sidebar-toggle {
+            font-size: 24px;
+            cursor: pointer;
+            color: #FFFFFF;
+        }
+
+        .navbar .sidebar-toggle:hover {
+            color: #E50914;
+            /* Netflix red on hover */
+        }
+
+        /* Main content area */
+        #upcoming-movies,
+        #results,
+        #movie-container {
+            padding-top: 30px;
+            /* Add padding to prevent content overlap */
+        }
+
+        /* Movie Grid */
+        #upcoming-movies,
+        #results,
+        #movie-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            /* Responsive grid */
+            gap: 20px;
+            /* Slightly larger gap for better spacing */
+            margin: 30px auto;
+            max-width: 90%;
+        }
+
+        /* Movie Grid */
+        #upcoming-movies {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            /* Responsive grid */
+            gap: 20px;
+            /* Slightly larger gap for better spacing */
+            margin: 30px auto;
+            max-width: 90%;
+        }
+
+
+
+        /* Buttons */
+        .button {
+            background-color: #E50914;
+            /* Netflix red button */
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border: none;
+            border-radius: px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #B20710;
+            /* Darker red on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(229, 9, 20, 0.3);
+        }
+
+        /* Header Styling */
+        header {
+            background: #141414;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #E50914;
+            /* Netflix red for header text */
+            border-bottom: 1px solid #333333;
+            /* Subtle border */
+        }
+
+        .header {
+            font-size: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .text_item {
+            font-size: 1.5rem;
+            margin-left: 490px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .text_item {
+                font-size: 1.5rem;
+                margin-left: 0;
+            }
+        }
+
+
+
+ /* Movie Container */
+#results,
+#movie-container {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr); /* 6 columns */
+    gap: 20px; /* Spacing between cards */
+    margin: 30px auto;
+    max-width: 90%;
+    padding: 0 20px; /* Add padding to align with the page */
+}
+
+/* Movie Card Styling */
+.movie {
+    text-align: center;
+    color: #FFFFFF;
+    background: #141414;
+    border-radius: 8px;
+    overflow: hidden; /* Ensure the image fits inside the card */
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative; /* For hover effects */
+}
+
+.movie:hover {
+    transform: scale(1.05); /* Slight zoom on hover */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6); /* Stronger shadow on hover */
+}
+
+.movie img {
+    width: 100%; /* Ensure the image takes full width */
+    height: auto;
+    border-radius: 8px 8px 0 0; /* Rounded corners only at the top */
+    transition: transform 0.3s ease;
+}
+
+.movie:hover img {
+    transform: scale(1.1); /* Slight zoom on image hover */
+}
+
+.movie h3 {
+    font-size: 1.1rem; /* Slightly larger text */
+    margin: 10px 0;
+    padding: 0 10px;
+    color: #FFFFFF;
+    transition: color 0.3s ease;
+}
+
+.movie:hover h3 {
+    color: #E50914; /* Netflix red on hover */
+}
+
+/* Netflix-Like Overlay */
+.movie::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5); /* Dark overlay */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.movie:hover::before {
+    opacity: 1; /* Show overlay on hover */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    #results,
+    #movie-container {
+        grid-template-columns: repeat(5, 1fr); /* 5 columns for smaller screens */
+    }
+}
+
+@media (max-width: 900px) {
+    #results,
+    #movie-container {
+        grid-template-columns: repeat(4, 1fr); /* 4 columns for tablets */
+    }
+}
+
+@media (max-width: 600px) {
+    #results,
+    #movie-container {
+        grid-template-columns: repeat(3, 1fr); /* 3 columns for mobile */
+    }
+}
+
+@media (max-width: 400px) {
+    #results,
+    #movie-container {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns for small mobile */
+    }
+}
+
+
+        /* Modal */
+        #modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #141414;
+            color: #FFFFFF;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80%;
+            overflow-y: auto;
+            z-index: 1000;
+            border: 1px solid #333333;
+        }
+
+        /* Style for the close button */
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #E50914;
+            /* Netflix red close button */
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .close:hover {
+            background-color: #B20710;
+            /* Darker red on hover */
+        }
+
+        /* Like/Dislike Buttons */
+        .like-button,
+        .dislike-button {
+            background-color: #333333;
+            /* Dark gray */
+            color: white;
+            border: 1px solid #444444;
+            /* Lighter border */
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .like-button:hover,
+        .dislike-button:hover {
+            background-color: #444444;
+            /* Lighter gray on hover */
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(20, 20, 20, 0.9);
+            /* Semi-transparent dark overlay */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #E50914;
+            /* Netflix red spinner */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #upcoming-movies-btn {
+            background-color: red;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        #upcoming-movies-btn {
+            background-color: transparent;
+            /* No background */
+            color: white;
+            /* Default text color */
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            transition: color 0.3s ease;
+            /* Smooth text color transition */
+            margin-left: 90px;
+            /* Adjust the value as needed */
+        }
+
+        #upcoming-movies-btn:hover {
+            color: red;
+            /* Text turns red on hover */
+        }
+
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-wrap: wrap;
+                /* Allow items to wrap to the next line */
+                padding: 5px 10px;
+                /* Further reduce padding */
+            }
+
+            .navbar .logo img {
+                height: 25px;
+                /* Further reduce logo height */
+            }
+
+            .navbar .search-bar {
+                order: 3;
+                /* Move search bar to the bottom */
+                width: 100%;
+                /* Full width */
+                margin: 10px 0;
+                /* Add margin for spacing */
+            }
+
+            .navbar .nav-links {
+                order: 2;
+                /* Move nav links to the middle */
+                margin-left: auto;
+                /* Align to the right */
+            }
+
+            .navbar .nav-button {
+                padding: 6px 10px;
+                /* Further reduce padding */
+                font-size: 12px;
+                /* Further reduce font size */
+                margin-left: 5px;
+                /* Further reduce margin */
+            }
+
+            .navbar .sidebar-toggle {
+                font-size: 18px;
+                /* Further reduce font size */
+                padding: 4px;
+                /* Further reduce padding */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar .nav-links {
+                display: none;
+                /* Hide nav links on very small screens */
+            }
+
+            .navbar .sidebar-toggle {
+                margin-left: auto;
+                /* Align sidebar toggle to the right */
+            }
+
+            .navbar .search-bar input {
+                font-size: 12px;
+                /* Further reduce font size */
+            }
+
+            .navbar .search-bar button {
+                font-size: 12px;
+                /* Further reduce font size */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                height: auto;
+                padding: 10px;
+            }
+
+            .search-bar {
+                margin: 10px 0;
+            }
+
+            .nav-links {
+                margin-top: 10px;
+            }
+
+            .nav-links a,
+            .nav-button {
+                margin: 5px 0;
+            }
+        }
+
+        /* Style for the search input */
+        #searchQuery {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        /* Style for the datalist options */
+        #suggestionsList option {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+
+        #suggestionsList option:hover {
+            background-color: #e9e9e9;
+        }
+
+        button {
+            background-color: #007bff00;
+            /* Blue color */
+            color: white;
+            font-size: 16px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #E50914;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            background-color: #fbfbfc00;
+            transform: scale(0.98);
+        }
+
+
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            /* Space for icon */
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 25px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-container input:focus {
+            border-color: #007bff00;
+        }
+
+        .search-container button {
+            position: absolute;
+            right: 10px;
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            color: #5555559b;
+            cursor: pointer;
+            outline: none;
+            /* Remove focus outline */
+        }
+
+        .search-container button:focus {
+            outline: none;
+            /* Ensure no outline appears */
+        }
+
+        .search-container button:active {
+            background: transparent;
+            /* Prevent background change on click */
+        }
+
+
+        .search-container button:hover {
+            color: #007bff;
+        }
+
+ /* Hero Slider Section */
+.hero-slider {
+    height: 70vh; /* Adjust height for a more cinematic look */
+    background-color: #000; /* Full black background */
+    color: #FFFFFF; /* White text */
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Featured Movie Section */
+.featured-movie {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+/* Left Side (Black Gradient) */
+.featured-movie::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%; /* Left half of the screen */
+    height: 100%;
+    background: linear-gradient(to right, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0)); /* Black to transparent gradient */
+    z-index: 1;
+}
+
+/* Right Side (Movie Poster) */
+.featured-movie::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%; /* Right half of the screen */
+    height: 100%;
+    background-size: cover; /* Ensures the image covers the right half */
+    background-position: center; /* Centers the image */
+    z-index: 0;
+}
+
+/* Content (Title, Description, Button) */
+.featured-content {
+    position: relative;
+    z-index: 2;
+    max-width: 40%; /* Adjust based on your design */
+    padding-left: 5%; /* Add some padding for better alignment */
+}
+
+.featured-title {
+    font-size: 48px; /* Larger title for emphasis */
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.featured-description {
+    font-size: 20px; /* Larger description text */
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.featured-button {
+    background-color: #E50914; /* Red button */
+    color: #FFFFFF; /* White text */
+    padding: 15px 30px;
+    border: none;
+    border-radius: 4px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.featured-button:hover {
+    background-color: #B20710; /* Darker red on hover */
+    transform: scale(1.05); /* Slight zoom effect on hover */
+}
+
+
+/* Movie Slider Styling */
+.movie-slider {
+    display: flex;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    gap: 20px; /* Spacing between cards */
+    padding: 10px 0; /* Add padding for better alignment */
+}
+
+.movie-slider::-webkit-scrollbar {
+    display: none; /* Hide scrollbar */
+}
+
+/* Movie Card Styling */
+.movie-card {
+    width: 200px; /* Fixed width for each card */
+    text-align: center;
+    color: #FFFFFF;
+    background: #141414;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    flex: 0 0 auto; /* Prevent flex items from shrinking or growing */
+}
+
+.movie-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.movie-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px 8px 0 0;
+}
+
+.movie-card h3 {
+    font-size: 16px;
+    margin: 10px 0;
+    padding: 0 10px;
+}
+
+/* Slider Navigation Buttons */
+.slider-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #FFFFFF;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.slider-nav.prev {
+    left: 0;
+}
+
+.slider-nav.next {
+    right: 0;
+}
+
+.slider-nav:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+    </style>
+</head>
+
+<body>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}" id="flash-message">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Navigation Bar -->
+    <div class="navbar">
+
+        <a href="#" id="upcoming-movies-btn">Upcoming</a>
+        <div class="search-bar">
+            <form id="searchForm" onsubmit="searchMovies(); return false;">
+                <div class="search-container">
+                    <input type="text" id="searchQuery" name="searchQuery" placeholder="Enter movie name..."
+                        list="suggestionsList" oninput="fetchSuggestions()" />
+                    <button type="submit">
+                        <i class="fas fa-search"></i> <!-- FontAwesome search icon -->
+                    </button>
+                </div>
+                <datalist id="suggestionsList"></datalist>
+            </form>
+        </div>
+
+        <!-- FontAwesome for icons (if not already included) -->
+        <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+        <div>
+            <button type="button" onclick="recommendMovies()">
+                Recommend
+            </button>
+        </div>
+        <div class="nav-links">
+            <a href="#" data-toggle="modal" data-target="#signupModal">Sign Up</a>
+            <a href="#" data-toggle="modal" data-target="#signinModal">Sign In</a>
+        </div>
+    </div>
+    <div id="upcoming-movies"></div>
+    <div id="loading" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+<!-- Hero Slider Section -->
+<section class="hero-slider">
+    <!-- Featured Movie -->
+    <div class="featured-movie">
+        <div class="featured-content">
+            <h2 class="featured-title">Featured Movie Title</h2>
+            <p class="featured-description">This is a short description of the featured movie.</p>
+            <button class="featured-button">Watch Now</button>
+        </div>
+    </div>
+</section>
+
+<!-- Genre Buttons -->
+<div class="genre-buttons">
+    <button class="genre-button" data-genre-id="28">Action</button>
+    <button class="genre-button" data-genre-id="35">Comedy</button>
+    <button class="genre-button" data-genre-id="878">Sci-Fi</button>
+    <button class="genre-button" data-genre-id="12">Adventure</button>
+    <button class="genre-button" data-genre-id="27">Horror</button>
+    <button class="genre-button" data-genre-id="18">Drama</button>
+    <!-- Add more genre buttons as needed -->
+</div>
+
+<!-- Now Playing Slider -->
+<section class="genre-section">
+    <h2>Now Playing</h2>
+    <div class="movie-slider" id="now-playing-slider">
+        <!-- Now Playing movies will be dynamically added here -->
+    </div>
+    <button class="slider-nav prev" onclick="slideSlider('now-playing-slider', -1)">&#10094;</button>
+    <button class="slider-nav next" onclick="slideSlider('now-playing-slider', 1)">&#10095;</button>
+</section>
+
+<!-- Bollywood Movies Section -->
+<section class="genre-section">
+    <h2>Bollywood Movies</h2>
+    <div class="movie-slider" id="bollywood-slider">
+        <!-- Bollywood movies will be dynamically added here -->
+    </div>
+    <button class="slider-nav prev" onclick="slideSlider('bollywood-slider', -1)">&#10094;</button>
+    <button class="slider-nav next" onclick="slideSlider('bollywood-slider', 1)">&#10095;</button>
+</section>
+
+<!-- Genre Sections Container -->
+<div id="genre-sections-container">
+    <!-- Genre sections will be dynamically added here -->
+</div>
+    <div id="results"></div>
+    <div class="movie-container" id="movie-container"></div>
+
+        <div id="modal" style="display: none;">
+        <button class="close" onclick="closeModal()">X</button>
+        <h2 id="modalTitle"></h2>
+        <div id="modalTrailerContainer"></div>
+        <p id="modalOverview"></p>
+        <p><strong>Release Date:</strong> <span id="modalReleaseDate"></span></p>
+        <p><strong>Rating:</strong> <span id="modalRating"></span></p>
+
+        <!-- Like and Dislike Buttons -->
+        <button class="like-button" onclick="likeMovie()">👍 <span id="likeCount">0</span></button>
+        <button class="dislike-button" onclick="dislikeMovie()">👎 <span id="dislikeCount">0</span></button>
+        <a id="modalDownloadLink" href="#" target="_blank" class="button-style">Download Movie</a>
+    </div>
+
+
+    <!-- Bootstrap modal for sign up -->
+    <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="signupModalLabel">Sign Up</h5>
+                    <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/signup" method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn ">Sign Up</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap modal for sign in -->
+    <div class="modal fade" id="signinModal" tabindex="-1" aria-labelledby="signinModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="signinModalLabel">Sign In</h5>
+                    <button type="button" class="btn custom-close-btn" data-bs-dismiss="modal"
+                        aria-label="Close">X</button>
+
+                </div>
+                <div class="modal-body">
+                    <form action="/signin" method="post">
+                        <div class="mb-3">
+                            <label for="signinUsername" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="signinUsername" name="signinUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signinPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="signinPassword" name="signinPassword"
+                                required>
+                        </div>
+                        <button type="submit" class="btn ">Sign In</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("open");
+        }
+    </script>
+
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var flashMessage = document.getElementById('flash-message');
+            if (flashMessage) {
+                setTimeout(function () {
+                    flashMessage.style.display = 'none';
+                }, 2000);
+            }
+        });
+        // Handle signup form submission
+        document.getElementById('signupForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            fetch('/signup', {
+                method: 'POST',
+                body: formData,
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.message === 'Sign Up Successful') {
+                        alert('Sign Up Successful!');
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('signupModal'));
+                        modal.hide();
+                    } else {
+                        alert('Sign Up Failed!');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('Something went wrong!');
+                });
+        });
+
+        // Handle signin form submission
+        document.getElementById('signinForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            fetch('/signin', {
+                method: 'POST',
+                body: formData,
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.message === 'Sign In Successful') {
+                        alert('Sign In Successful!');
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('signinModal'));
+                        modal.hide();
+                    } else {
+                        alert('Sign In Failed!');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('Something went wrong!');
+                });
+        });
+
+
+
+
+    </script>
+
+    <script>
+
+        let likeCount = 0;
+        let dislikeCount = 0;
+        let userAction = null; // Tracks user's action: 'like', 'dislike', or null
+
+        function likeMovie() {
+            if (userAction === 'like') {
+                // If already liked, undo the like
+                likeCount--;
+                userAction = null;
+            } else {
+                // If disliked before, undo the dislike
+                if (userAction === 'dislike') {
+                    dislikeCount--;
+                }
+                // Add the like
+                likeCount++;
+                userAction = 'like';
+            }
+            updateCounts();
+        }
+
+        function dislikeMovie() {
+            if (userAction === 'dislike') {
+                // If already disliked, undo the dislike
+                dislikeCount--;
+                userAction = null;
+            } else {
+                // If liked before, undo the like
+                if (userAction === 'like') {
+                    likeCount--;
+                }
+                // Add the dislike
+                dislikeCount++;
+                userAction = 'dislike';
+            }
+            updateCounts();
+        }
+
+        function updateCounts() {
+            document.getElementById("likeCount").textContent = likeCount;
+            document.getElementById("dislikeCount").textContent = dislikeCount;
+        }
+
+
+
+        // Clear the movie container
+        function clearMovieContainer() {
+            const movieContainer = document.getElementById('movie-container');
+            movieContainer.innerHTML = ''; // Clear all existing content
+        }
+
+        // Clear the search results container
+        function clearSearchResults() {
+            const searchResults = document.getElementById('search-results');
+            searchResults.innerHTML = ''; // Clear all existing content
+        }
+
+        // Fetch Bollywood movies
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Fetch Bollywood Movies
+        function fetchBollywoodMovies() {
+            clearUpcomingMovies();
+            clearSearchResults();
+            clearMovieContainer();
+            showLoading();
+
+            const movieContainer = document.getElementById('movie-container');
+            // showSkeletons(movieContainer, 5);
+
+
+            fetch('/bollywood_movies')
+                .then(response => response.json())
+                .then(data => {
+                    // hideSkeletons(movieContainer);
+                    movieContainer.innerHTML = '';
+
+                    if (data.movies && data.movies.length > 0) {
+                        data.movies.forEach(movie => {
+                            const movieDiv = document.createElement('div');
+                            movieDiv.classList.add('movie');
+                            movieDiv.innerHTML = `
+                        <img src="${movie.poster_url || 'https://via.placeholder.com/500x750?text=No+Image+Available'}" alt="${movie.title || 'Movie Poster'}">
+                        <h3>${movie.title || 'Unknown Title'}</h3>
+                    `;
+                            movieDiv.addEventListener('click', function () {
+                                fetchMovieDetails(movie.id);
+                            });
+
+                            movieContainer.appendChild(movieDiv);
+                        });
+                    } else {
+                        movieContainer.innerHTML = '<p>No Bollywood movies available.</p>';
+                    }
+                })
+                .catch(error => {
+                    // hideSkeletons(movieContainer);
+                    console.error('Error fetching Bollywood movies:', error);
+                })
+                .finally(() => {
+                    hideLoading(); // Hide loading animation
+                });
+        }
+        // Fetch Movies by Genre
+        function fetchMoviesByGenre(genreId) {
+            clearUpcomingMovies();
+            clearSearchResults();
+            clearMovieContainer();
+            showLoading();
+
+            const movieContainer = document.getElementById('movie-container');
+            fetch(`/genre_movie`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ genre_id: genreId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    movieContainer.innerHTML = '';
+
+                    if (data.movies && data.movies.length > 0) {
+                        data.movies.forEach(movie => {
+                            const movieDiv = document.createElement('div');
+                            movieDiv.classList.add('movie');
+                            movieDiv.innerHTML = `
+                        <img src="${movie.poster_url || 'https://via.placeholder.com/500x750?text=No+Image+Available'}" alt="${movie.title || 'Movie Poster'}">
+                        <h3>${movie.title || 'Unknown Title'}</h3>
+                    `;
+                            movieDiv.addEventListener('click', function () {
+                                fetchMovieDetails(movie.id);
+                            });
+
+                            movieContainer.appendChild(movieDiv);
+                        });
+                    } else {
+                        movieContainer.innerHTML = '<p>No movies available for this genre.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching genre movies:', error);
+                })
+                .finally(() => {
+                    hideLoading(); // Hide loading animation
+                });
+        }
+
+        // Event Delegation for Genre and Bollywood Buttons
+        document.addEventListener('click', function (event) {
+            if (event.target.classList.contains('genre-item')) {
+                const genreId = event.target.dataset.id;
+                fetchMoviesByGenre(genreId);
+            } else if (event.target.id === 'bollywood-button') {
+                fetchBollywoodMovies();
+            }
+        });
+        // Utility Functions
+        // Utility Functions
+        function clearSearchResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function clearMovieContainer() {
+            const container = document.getElementById('movie-container');
+            if (container) container.innerHTML = '';
+        }
+
+        // Search Movies Function
+        function searchMovies() {
+            const query = document.getElementById('searchQuery').value.trim();
+            const resultsDiv = document.getElementById('results');
+
+            // Clear previous results
+            clearUpcomingMovies();
+            clearSearchResults();
+            clearMovieContainer();
+            showLoading();
+
+            if (!query) {
+                alert('Please enter a movie name!');
+                return;
+            }
+
+            // Fetch movie data
+            fetch('/search_movie', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.movies && data.movies.length > 0) {
+                        data.movies.forEach(movie => {
+                            const movieDiv = document.createElement('div');
+                            movieDiv.classList.add('movie');
+                            movieDiv.innerHTML = `
+                    <img src="${movie.poster_url || 'https://via.placeholder.com/500x750?text=No+Image+Available'}" alt="${movie.title || 'Movie Poster'}">
+                    <h3>${movie.title || 'Unknown Title'}</h3>
+                `;
+
+                            // Add event listener to fetch movie details when clicked
+                            movieDiv.addEventListener('click', function () {
+                                fetchMovieDetails(movie.id);
+                            });
+
+                            resultsDiv.appendChild(movieDiv);
+                        });
+                    } else {
+                        resultsDiv.innerHTML = `<p>No movies found. Try a different search term.</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    resultsDiv.innerHTML = `<p>An error occurred. Please try again later.</p>`;
+                })
+                .finally(() => {
+                    hideLoading(); // Hide loading animation
+                });
+        }
+
+        // Movie Details Function (Example Implementation)
+        function fetchMovieDetails(movieId) {
+            fetch(`/movie_details/${movieId}`)
+                .then(response => response.json())
+                .then(movie => {
+                    document.getElementById('modalTitle').innerText = movie.title;
+                    document.getElementById('modalPoster').src = movie.poster_url;
+                    document.getElementById('modalOverview').innerText = movie.overview;
+                    document.getElementById('modalReleaseDate').innerText = `Released: ${movie.release_date}`;
+                    document.getElementById('modalRating').innerText = `Rating: ${movie.rating}/10`;
+
+                    // Show modal
+                    document.getElementById('modal').style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching details:', error));
+        }
+
+        // UI Functions
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            const trailerContainer = document.getElementById('modalTrailerContainer');
+            trailerContainer.innerHTML = ''; // Clear trailer iframe
+            modal.style.display = 'none';
+        }
+
+        // Event Listeners
+        document.addEventListener('click', function (event) {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.querySelector('.sidebar-toggle');
+
+            if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                sidebar.classList.add('collapsed');
+            }
+        });
+        function fetchMovieDetails(movieId) {
+            fetch('/get_movie_details', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ movie_ids: [movieId] })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.movies && data.movies.length > 0) {
+                        const movie = data.movies[0];
+                        const movieTitle = movie.title || 'Unknown Title';
+
+                        // Populate modal with movie details
+                        document.getElementById('modalTitle').innerText = movieTitle;
+                        document.getElementById('modalOverview').innerText = movie.overview || 'No overview available.';
+                        document.getElementById('modalReleaseDate').innerText = movie.release_date || 'N/A';
+                        document.getElementById('modalRating').innerText = movie.vote_average || 'N/A';
+
+                        // Fetch trailer link from TMDb API
+                        fetch(`/get_movie_trailer/${movieId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const trailerContainer = document.getElementById('modalTrailerContainer');
+
+                                if (data.trailer_url) {
+                                    // If trailer is available, embed the video from TMDb
+                                    const iframe = document.createElement('iframe');
+                                    iframe.src = `${data.trailer_url}?enablejsapi=1`; // Add enablejsapi=1
+                                    iframe.width = '100%';
+                                    iframe.height = '315';
+                                    iframe.frameBorder = '0';
+                                    iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
+                                    iframe.allowFullscreen = true;
+
+                                    // Clear previous trailer content and append the iframe
+                                    trailerContainer.innerHTML = '';  // Clear previous content
+                                    trailerContainer.appendChild(iframe);
+                                } else {
+                                    // If no trailer, show "Trailer not available" message
+                                    trailerContainer.innerHTML = '<p>Trailer not available</p>';
+                                }
+
+                                // Set the Download link dynamically
+                                const downloadLink = `https://uhdmovies.beer/search/${encodeURIComponent(movieTitle)}`;
+                                document.getElementById('modalDownloadLink').href = downloadLink;
+
+                                // Show modal with movie details and trailer (if available)
+                                document.getElementById('modal').style.display = 'block';
+                            })
+                            .catch(error => {
+                                console.error('Error fetching trailer:', error);
+                                alert('Failed to fetch trailer.');
+                            });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to fetch movie details.');
+                });
+        }
+        // Fetch the movie trailer URL from the Flask backend
+        async function fetchMovieTrailer() {
+            const movieTitle = document.getElementById('movieTitle').value;
+            if (!movieTitle) {
+                alert("Please enter a movie title.");
+                return;
+            }
+
+            try {
+                // Fetch movie ID
+                const responseId = await fetch(`/get_movie_id/${movieTitle}`);
+                const dataId = await responseId.json();
+                if (dataId.error) {
+                    alert("Movie not found.");
+                    return;
+                }
+
+                const movieId = dataId.movie_id;
+
+                // Fetch trailer URL using movie ID
+                const responseTrailer = await fetch(`/get_movie_trailer/${movieId}`);
+                const dataTrailer = await responseTrailer.json();
+                if (dataTrailer.error) {
+                    alert("Trailer not found.");
+                    return;
+                }
+
+                // Open modal and set trailer URL
+                document.getElementById('modalTitle').textContent = movieTitle;
+                document.getElementById('modalYouTubeLink').href = dataTrailer.trailer_url;
+                document.getElementById('modalYouTubeLink').textContent = 'Watch Trailer';
+                document.getElementById('modal').style.display = 'block';
+            } catch (error) {
+                alert("Error fetching data.");
+            }
+        }
+
+        // Close modal function
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        function recommendMovies() {
+            const query = document.getElementById('searchQuery').value.trim();
+            const resultsDiv = document.getElementById('results');
+            clearUpcomingMovies();
+            showLoading();
+
+
+            if (!query) {
+                alert('Please enter a movie name!');
+                return;
+            }
+
+            fetch('/recommend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: query })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = ''; // Clear previous results
+
+                    if (data.searched_movie) {
+                        // Render the searched movie
+                        const searchedMovieDiv = document.createElement('div');
+                        searchedMovieDiv.classList.add('movie');
+                        searchedMovieDiv.innerHTML = `
+                <img src="${data.searched_movie.poster_url || 'https://via.placeholder.com/500x750?text=No+Image+Available'}" alt="${data.searched_movie.title || 'Movie Poster'}">
+                <h3>${data.searched_movie.title || 'Unknown Title'}</h3>
+            `;
+                        searchedMovieDiv.addEventListener('click', function () {
+                            fetchMovieDetails(data.searched_movie.id);
+                        });
+                        resultsDiv.appendChild(searchedMovieDiv);
+                    }
+
+                    if (data.recommended_movies && data.recommended_movies.length > 0) {
+                        // Render the recommendations
+
+                        data.recommended_movies.forEach(movie => {
+                            const movieDiv = document.createElement('div');
+                            movieDiv.classList.add('movie');
+                            movieDiv.innerHTML = `
+                    <img src="${movie.poster_url || 'https://via.placeholder.com/500x750?text=No+Image+Available'}" alt="${movie.title || 'Movie Poster'}">
+                    <h3>${movie.title || 'Unknown Title'}</h3>`;
+                            movieDiv.addEventListener('click', function () {
+                                fetchMovieDetails(movie.id);
+                            });
+                            resultsDiv.appendChild(movieDiv);
+                        });
+                    } else {
+                        resultsDiv.innerHTML += `<p>No recommendations found for "${query}". Try another movie!</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    resultsDiv.innerHTML = `<p>An error occurred. Please try again later.</p>`;
+                })
+                .finally(() => {
+                    hideLoading(); // Hide loading animation
+                });
+        }
+
+        // JavaScript to toggle the sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+
+        function clearUpcomingMovies() {
+            const upcomingMoviesContainer = document.getElementById('upcoming-movies');
+            upcomingMoviesContainer.innerHTML = ''; // Clear the container
+        }
+        // Fetch and display upcoming movies
+        async function fetchUpcomingMovies() {
+            const upcomingMoviesContainer = document.getElementById('upcoming-movies');
+            upcomingMoviesContainer.innerHTML = ''; // Clear previous content
+            clearMovieContainer();
+            showLoading();
+
+            try {
+                const response = await fetch('/upcoming_movies');
+                const data = await response.json();
+
+                if (data.movies && data.movies.length > 0) {
+                    data.movies.forEach(movie => {
+                        const movieDiv = document.createElement('div');
+                        movieDiv.classList.add('movie');
+                        movieDiv.innerHTML = `
+                    <img src="${movie.poster_url || 'https://via.placeholder.com/500x750?text=No+Image+Available'}" alt="${movie.title || 'Movie Poster'}">
+                    <h3>${movie.title || 'Unknown Title'}</h3>
+                `;
+                        movieDiv.addEventListener('click', function () {
+                            fetchMovieDetails(movie.id); // Function to fetch movie details
+                        });
+                        upcomingMoviesContainer.appendChild(movieDiv);
+                    });
+                } else {
+                    upcomingMoviesContainer.innerHTML = '<p>No upcoming movies available.</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching upcoming movies:', error);
+                upcomingMoviesContainer.innerHTML = '<p>Failed to load upcoming movies. Please try again later.</p>';
+            }
+            finally {
+                hideLoading(); // Hide loading animation
+            };
+        }
+
+
+        // Add event listener to the "Upcoming Movies" button
+        document.getElementById('upcoming-movies-btn').addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent default link behavior
+            fetchUpcomingMovies(); // Fetch and display upcoming movies
+        });
+
+
+        // Automatically hide the intro page after 3 seconds
+        setTimeout(function () {
+            // Hide the intro page
+            document.getElementById('introPage').style.display = 'none';
+
+            // Show the movie recommendation frontend
+            document.getElementById('movieRecommender').style.display = 'block';
+        }, 3000); // 3000 milliseconds = 3 seconds
+
+
+        function fetchSuggestions() {
+            const query = document.getElementById('searchQuery').value.trim();
+            const datalist = document.getElementById('suggestionsList');
+
+            if (!query) {
+                datalist.innerHTML = ''; // Clear suggestions if query is empty
+                return;
+            }
+
+            // Fetch suggestions from backend
+            fetch(`/autocomplete?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    datalist.innerHTML = ''; // Clear previous suggestions
+
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        data.suggestions.forEach(suggestion => {
+                            const option = document.createElement('option');
+                            option.value = suggestion;
+                            datalist.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching suggestions:', error);
+                });
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Fetch now playing movies on page load
+document.addEventListener('DOMContentLoaded', function () {
+    const featuredMovieSection = document.querySelector('.featured-movie');
+    const featuredTitle = document.querySelector('.featured-title');
+    const featuredDescription = document.querySelector('.featured-description');
+    const featuredButton = document.querySelector('.featured-button');
+
+    let currentIndex = 0;
+    let topMovies = [];
+
+    // Fetch now playing movies
+    fetch('/now_playing')
+        .then(response => response.json())
+        .then(data => {
+            if (data.movies && data.movies.length > 0) {
+                // Get the top 10 movies
+                topMovies = data.movies.slice(0, 10);
+
+                // Initialize the slider with the first movie
+                updateSlider();
+
+                // Automatically update the slider every 8 seconds (slower transition)
+                setInterval(() => {
+                    currentIndex = (currentIndex + 1) % topMovies.length;
+                    updateSlider();
+                }, 8000); // 8 seconds delay
+            } else {
+                console.log('No movies available at the moment.');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching movies:', error);
+        });
+
+    // Function to update the featured movie
+    function updateSlider() {
+        if (topMovies.length === 0) return;
+
+        // Get the current featured movie
+        const featuredMovie = topMovies[currentIndex];
+
+        // Update featured movie section
+        featuredMovieSection.style.backgroundImage = `url(${featuredMovie.poster_url || 'https://via.placeholder.com/1200x600'})`;
+        featuredTitle.textContent = featuredMovie.title || 'Unknown Title';
+        featuredDescription.textContent = featuredMovie.overview || 'No description available.';
+        featuredButton.textContent = 'Watch Now';
+
+        // Add a fade-in effect for the new movie
+        featuredMovieSection.style.opacity = 0;
+        setTimeout(() => {
+            featuredMovieSection.style.opacity = 1;
+        }, 100);
+
+        // Add event listener to the "Watch Now" button
+        featuredButton.onclick = () => fetchMovieDetails(featuredMovie.id);
+    }
+});
+
+
+
+
+
+
+
+
+// Function to update the featured movie
+function updateSlider() {
+    if (topMovies.length === 0) return;
+
+    // Get the current featured movie
+    const featuredMovie = topMovies[currentIndex];
+
+    // Update the right half with the movie poster
+    const featuredMovieSection = document.querySelector('.featured-movie');
+    featuredMovieSection.style.backgroundImage = `url(${featuredMovie.poster_url || 'https://via.placeholder.com/1200x600'})`;
+
+    // Update content
+    document.querySelector('.featured-title').textContent = featuredMovie.title || 'Unknown Title';
+    document.querySelector('.featured-description').textContent = featuredMovie.overview || 'No description available.';
+    document.querySelector('.featured-button').textContent = 'Watch Now';
+
+    // Add a fade-in effect for the new movie
+    featuredMovieSection.style.opacity = 0;
+    setTimeout(() => {
+        featuredMovieSection.style.opacity = 1;
+    }, 100);
+
+    // Add event listener to the "Watch Now" button
+    document.querySelector('.featured-button').onclick = () => fetchMovieDetails(featuredMovie.id);
+}
+
+
+
+
+
+
+
+
+
+
+
+// Function to populate genre sliders
+function populateGenreSlider(sliderId, movies, uniqueMovieIds) {
+    const slider = document.getElementById(sliderId);
+    movies.forEach(movie => {
+        if (!uniqueMovieIds.has(movie.id)) { // Check if the movie is already loaded
+            const movieCard = document.createElement('div');
+            movieCard.classList.add('movie-card');
+            movieCard.innerHTML = `
+                <img src="${movie.poster_url || 'https://via.placeholder.com/200x300'}" alt="${movie.title}">
+                <h3>${movie.title}</h3>
+            `;
+            movieCard.addEventListener('click', () => fetchMovieDetails(movie.id));
+            slider.appendChild(movieCard);
+
+            // Add the movie ID to the set of unique IDs
+            uniqueMovieIds.add(movie.id);
+        }
+    });
+}
+
+// Function to create a genre section
+function createGenreSection(genreId, genreName) {
+    const container = document.getElementById('genre-sections-container');
+
+    // Check if the genre section already exists
+    if (document.getElementById(`${genreId}-slider`)) {
+        return; // Do nothing if the section already exists
+    }
+
+    // Create genre section
+    const genreSection = document.createElement('section');
+    genreSection.classList.add('genre-section');
+    genreSection.innerHTML = `
+        <h2>${genreName}</h2>
+        <div class="movie-slider" id="${genreId}-slider"></div>
+        <button class="slider-nav prev" onclick="slideSlider('${genreId}-slider', -1)">&#10094;</button>
+        <button class="slider-nav next" onclick="slideSlider('${genreId}-slider', 1)">&#10095;</button>
+    `;
+
+    // Append genre section to the container
+    container.appendChild(genreSection);
+
+    // Initialize a Set to track unique movie IDs for this genre
+    const uniqueMovieIds = new Set();
+
+    // Fetch and populate initial movies for this genre
+    fetchMoviesForGenre(genreId, 1, `${genreId}-slider`, uniqueMovieIds);
+
+    // Add infinite scrolling to the slider
+    const slider = document.getElementById(`${genreId}-slider`);
+    slider.addEventListener('scroll', () => {
+        if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 100) {
+            // Load more movies when the user reaches the end of the slider
+            const currentPage = parseInt(slider.dataset.page) || 1;
+            fetchMoviesForGenre(genreId, currentPage + 1, `${genreId}-slider`, uniqueMovieIds);
+        }
+    });
+}
+
+// Function to fetch movies for a genre
+function fetchMoviesForGenre(genreId, page, sliderId, uniqueMovieIds) {
+    fetch(`/genre_movie?genre_id=${genreId}&page=${page}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.movies && data.movies.length > 0) {
+                populateGenreSlider(sliderId, data.movies, uniqueMovieIds);
+
+                // Update the current page in the slider's dataset
+                const slider = document.getElementById(sliderId);
+                slider.dataset.page = page;
+            }
+        });
+}
+
+// Function to slide the slider
+function slideSlider(sliderId, direction) {
+    const slider = document.getElementById(sliderId);
+    slider.scrollBy({
+        left: direction * 300, // Adjust scroll distance as needed
+        behavior: 'smooth'
+    });
+}
+
+// Handle genre button clicks
+document.addEventListener('DOMContentLoaded', function () {
+    const genreButtons = document.querySelectorAll('.genre-button');
+
+    genreButtons.forEach(genreButton => {
+        genreButton.addEventListener('click', function () {
+            const genreId = this.dataset.genreId;
+            const genreName = this.textContent;
+
+            // Create and populate the genre section
+            createGenreSection(genreId, genreName);
+        });
+    });
+});
+
+
+
+
+
+
+
+
+
+
+// Function to populate sliders
+function populateSlider(sliderId, movies) {
+    const slider = document.getElementById(sliderId);
+    movies.forEach(movie => {
+        const movieCard = document.createElement('div');
+        movieCard.classList.add('movie-card');
+        movieCard.innerHTML = `
+            <img src="${movie.poster_url || 'https://via.placeholder.com/200x300'}" alt="${movie.title}">
+            <h3>${movie.title}</h3>
+        `;
+        movieCard.addEventListener('click', () => fetchMovieDetails(movie.id));
+        slider.appendChild(movieCard);
+    });
+}
+
+// Function to fetch Now Playing movies
+function fetchNowPlayingMovies(page = 1) {
+    fetch(`/now_playing?page=${page}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.movies && data.movies.length > 0) {
+                populateSlider('now-playing-slider', data.movies);
+
+                // Update the current page in the slider's dataset
+                const slider = document.getElementById('now-playing-slider');
+                slider.dataset.page = page;
+            }
+        });
+}
+
+// Add infinite scrolling to the Now Playing slider
+const nowPlayingSlider = document.getElementById('now-playing-slider');
+if (nowPlayingSlider) {
+    nowPlayingSlider.addEventListener('scroll', () => {
+        if (nowPlayingSlider.scrollLeft + nowPlayingSlider.clientWidth >= nowPlayingSlider.scrollWidth - 100) {
+            // Load more movies when the user reaches the end of the slider
+            const currentPage = parseInt(nowPlayingSlider.dataset.page) || 1;
+            fetchNowPlayingMovies(currentPage + 1);
+        }
+    });
+}
+
+// Function to slide the slider
+function slideSlider(sliderId, direction) {
+    const slider = document.getElementById(sliderId);
+    slider.scrollBy({
+        left: direction * 300, // Adjust scroll distance as needed
+        behavior: 'smooth'
+    });
+}
+
+// Fetch initial Now Playing movies on page load
+document.addEventListener('DOMContentLoaded', function () {
+    fetchNowPlayingMovies(1);
+});
+
+
+
+
+
+
+
+
+
+
+
+// Function to populate genre sliders
+function populateGenreSlider(sliderId, movies) {
+    const slider = document.getElementById(sliderId);
+    movies.forEach(movie => {
+        const movieCard = document.createElement('div');
+        movieCard.classList.add('movie-card');
+        movieCard.innerHTML = `
+            <img src="${movie.poster_url || 'https://via.placeholder.com/200x300'}" alt="${movie.title}">
+            <h3>${movie.title}</h3>
+        `;
+        movieCard.addEventListener('click', () => fetchMovieDetails(movie.id));
+        slider.appendChild(movieCard);
+    });
+}
+
+// Function to fetch Bollywood movies
+function fetchBollywoodMovies(page) {
+    fetch(`/bollywood_movies?page=${page}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.movies && data.movies.length > 0) {
+                populateGenreSlider('bollywood-slider', data.movies);
+
+                // Update the current page in the slider's dataset
+                const slider = document.getElementById('bollywood-slider');
+                slider.dataset.page = page;
+            }
+        });
+}
+
+// Function to slide the slider
+function slideSlider(sliderId, direction) {
+    const slider = document.getElementById(sliderId);
+    slider.scrollBy({
+        left: direction * 300, // Adjust scroll distance as needed
+        behavior: 'smooth'
+    });
+}
+
+// Add infinite scrolling to the Bollywood slider
+document.addEventListener('DOMContentLoaded', function () {
+    const bollywoodSlider = document.getElementById('bollywood-slider');
+    if (bollywoodSlider) {
+        bollywoodSlider.addEventListener('scroll', () => {
+            if (bollywoodSlider.scrollLeft + bollywoodSlider.clientWidth >= bollywoodSlider.scrollWidth - 100) {
+                // Load more movies when the user reaches the end of the slider
+                const currentPage = parseInt(bollywoodSlider.dataset.page) || 1;
+                fetchBollywoodMovies(currentPage + 1);
+            }
+        });
+
+        // Fetch initial Bollywood movies
+        fetchBollywoodMovies(1);
+    }
+});
+    </script>
+</body>
+
+</html>
